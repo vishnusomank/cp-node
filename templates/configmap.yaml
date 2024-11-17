@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cp-node-config-{{ .Values.clusterName  }}
+  labels:
+    app: cp-node-{{ .Values.clusterName  }}
+data:
+  feeder-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.feeder.kmuxConfig) . | nindent 4 }}
+  feeder-alerts-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.feeder.alertsKmuxConfig) . | nindent 4 }}
+  feeder-policy-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.feeder.policyKmuxConfig) . | nindent 4 }}
+  feeder-summary-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.feeder.summaryKmuxConfig) . | nindent 4 }}
+  sia-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.sia.kmuxConfig) . | nindent 4 }}
+  sia-state-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.sia.stateKmuxConfig) . | nindent 4 }}
+  pea-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.pea.kmuxConfig) . | nindent 4 }}
+  pea-app.yaml: | 
+    {{ tpl (.Files.Get  .Values.configMaps.peaConfig) . | nindent 4 }}
+  pea-policy-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.pea.policyKmuxConfig) . | nindent 4 }}
+  pea-state-kmux-config.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.pea.stateKmuxConfig) . | nindent 4 }}
+  sia-app.yaml: |
+    {{ tpl (.Files.Get  .Values.configMaps.siaConfig) . | nindent 4 }}
+  spire-agent.conf: |
+    {{ tpl (.Files.Get  .Values.configMaps.spireAgentConfig) . | nindent 4 }}
+

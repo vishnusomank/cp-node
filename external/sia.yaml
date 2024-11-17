@@ -1,0 +1,28 @@
+spire:
+  enable: {{ .Values.spire.enable }}
+  agent: {{ include "spireAgentAddr" . | quote }}
+kmux-topic: cluster-entity/shared-event
+
+heartbeat:
+  interval: 5m
+
+resource-refresh:
+  interval: 5m
+
+kmux-config-file: /opt/sia/kmux-config.yaml
+
+state-agent:
+  port: 32769
+
+k8s:
+  enable: false
+
+tls:
+  enabled: true
+  state-topic: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.state ) | quote }}
+  state-kmux-config: /opt/sia/sia-state-kmux-config.yaml
+deployMode: "k8s"
+
+metrics:
+  enable: true
+  port: 2122

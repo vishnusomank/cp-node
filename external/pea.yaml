@@ -1,0 +1,43 @@
+server:
+  port: :6060
+  basepath: /pea
+
+application:
+  name: policy-enf-agent
+
+spire:
+  enable: {{ .Values.spire.enable }}
+  agent: {{ include "spireAgentAddr" . | quote }}
+
+endpoint:
+  urlendpoint: /pps/api/v1/policy-provider/fetch-policy
+  baseurlendpoint: https://{{.Values.address.pps}}
+
+statusendpoint:
+  endpoint: https://{{.Values.address.pps}}/pps/api/v1/policy-provider/change-status-policy
+
+syncuptime:
+  t: 5
+
+kmux-config-file: /opt/pea/kmux-config.yaml
+
+annotation:
+  statusendpoint: /pps/api/v1/policy-provider/update-annotation-status
+  annotationendpoint: /pps/api/v1/policy-provider/fetch-annotations
+  basepath: https://{{.Values.address.pps}}
+
+non-k8s:
+  enable: true
+  policy-server-port: 32770
+tls:
+  enabled: true
+  policy:
+    topic: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.policies ) | quote }}
+    kmux-config: /opt/pea/pea-policy-kmux-config.yaml
+  state:
+    topic: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.state ) | quote }}
+    kmux-config: /opt/pea/pea-state-kmux-config.yaml
+
+policy-watcher:
+  enable: false
+deployMode: "k8s"

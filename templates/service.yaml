@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cp-node-{{.Values.clusterName}}
+  labels:
+    app: cp-node-{{.Values.clusterName}}
+spec:
+  type: {{ .Values.services.cpNode.type }}
+  selector:
+    app: cp-node-{{ .Values.clusterName }}
+  ports:
+	{{- .Values.services.cpNode.ports | toYaml | nindent 2 }}

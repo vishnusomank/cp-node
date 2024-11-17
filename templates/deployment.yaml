@@ -1,0 +1,186 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cp-node-{{ .Values.clusterName }}
+  labels:
+    app: cp-node-{{ .Values.clusterName }}
+spec:
+  replicas: {{ .Values.cpNode.replicas | default 1 }}
+  strategy:
+    type: {{ .Values.cpNode.strategy.type | default "RollingUpdate" }}
+  selector:
+    matchLabels:
+      app: cp-node-{{ .Values.clusterName }}
+  template:
+    metadata:
+      labels:
+        app: cp-node-{{ .Values.clusterName }}
+    spec:
+      serviceAccountName: {{ include "prefixWithVariable" (dict "prefix" .Values.cpNode.serviceAccountName "variable" .Values.clusterName ) | quote }}
+      containers:
+      {{- if .Values.spireAgent.enabled }}
+      - image: {{.Values.spireAgent.image}}
+        name: sa
+        imagePullPolicy: Always
+        args:
+        - -config
+        - /run/spire/config/agent.conf
+        - -expandEnv
+        volumeMounts:
+        - mountPath: /run/spire/config/agent.conf
+          name: config-volume
+          subPath: spire-agent.conf
+          readOnly: true
+      {{- end }}
+      {{- if .Values.feederService.enabled }}
+      - image: {{.Values.feederService.image}}
+        name: fs
+        imagePullPolicy: Always
+        env:
+        - name: CLUSTER_NAME
+          value: default
+        - name: DISCOVERYENGINE_ENABLED
+          value: "true"
+        - name: DISCOVERYENGINE_VERSION
+          value: "2"
+        - name: ENABLE_VM
+          value: "true"
+        - name: HUBBLE_ENABLED
+          value: "false"
+        - name: IGNORE_SUMMARY_EVENTS
+          value: Network:AF_UNIX,AF_NETLINK
+        - name: KAFKA_ENABLED
+          value: "false"
+        - name: KMUX_CONFIG_PATH
+          value: /opt/feeder-service/kmux-config.yaml
+        - name: KMUX_LOGS_ENABLED
+          value: "false"
+        - name: KUBEARMOR_ENABLED
+          value: "true"
+        - name: KUBEARMOR_PORT
+          value: "32768"
+        - name: KUBEARMOR_URL
+          value: kubearmor-relay-server
+        - name: RABBITMQ_ALERTS_TOPIC
+          value: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.alerts ) | quote }}
+        - name: RABBITMQ_ENABLED
+          value: "true"
+        - name: RABBITMQ_LOGS_TOPIC
+          value: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.logs ) | quote }}
+        - name: SPIRE_AGENT_URL
+          value: {{ include "spireAgentAddr" . | quote }}
+        - name: SPIRE_ENABLED
+          value: "{{ .Values.spire.enable }}"
+        - name: TLS_CERT_FILE
+          value: /opt/cert/encoded.pem
+        - name: TLS_ENABLED
+          value: "true"
+        - name: DISCOVERYENGINE_POLICY_ENABLED
+          value: "false"
+        - name: SUMMARY_TOPIC
+          value: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.summaryV2 ) | quote }}
+        - name: POLICY_TOPIC
+          value: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.policyV1 ) | quote }}
+        - name: DEPLOY_MODE
+          value: "k8s"
+        - name: RABBITMQ_ALERTS_KMUX_CONFIG
+          value: /opt/feeder-service/feeder-alerts-kmux-config.yaml
+        - name: KMUX_CONFIG_POLICY 
+          value: /opt/feeder-service/feeder-policy-kmux-config.yaml
+        - name: KMUX_CONFIG_SUMMARY
+          value: /opt/feeder-service/feeder-summary-kmux-config.yaml
+        volumeMounts:
+        - mountPath: /opt/feeder-service/kmux-config.yaml
+          name: config-volume
+          subPath: feeder-kmux-config.yaml
+        - mountPath: /opt/feeder-service/feeder-alerts-kmux-config.yaml
+          name: config-volume
+          subPath: feeder-alerts-kmux-config.yaml
+        - mountPath: /opt/feeder-service/feeder-policy-kmux-config.yaml
+          name: config-volume
+          subPath: feeder-policy-kmux-config.yaml
+        - mountPath: /opt/feeder-service/feeder-summary-kmux-config.yaml
+          name: config-volume
+          subPath: feeder-summary-kmux-config.yaml
+        - name: tls-volume
+          mountPath: /opt/cert/encoded.pem
+          subPath: encoded.pem
+      {{- end }}
+      {{- if .Values.sharedInformerAgent.enabled }}
+      - image: {{.Values.sharedInformerAgent.image}}
+        imagePullPolicy: Always
+        name: sia
+        args:
+        - -config-path
+        - /opt/sia/
+        volumeMounts:
+        - name: config-volume
+          mountPath: /opt/sia/app.yaml
+          subPath: sia-app.yaml
+        - name: config-volume
+          mountPath: /opt/sia/kmux-config.yaml
+          subPath: sia-kmux-config.yaml
+        - name: config-volume
+          mountPath: /opt/sia/sia-state-kmux-config.yaml
+          subPath: sia-state-kmux-config.yaml
+        - name: tls-volume
+          mountPath: /opt/cert/encoded.pem
+          subPath: encoded.pem
+      {{- end }}
+      {{- if .Values.discover.enabled }}
+      - name: discover
+        image: {{.Values.discover.image}}
+        imagePullPolicy: {{.Values.discover.imagePullPolicy}}
+        args:
+        - --config
+        - /var/lib/discover/app.yaml
+        - --kmux-config
+        - /var/lib/discover/kmux.yaml
+        env:
+        - name: ENABLE_GRPC
+          value: "false"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /opt/discover/discover.yaml
+          subPath: discover.yaml
+        - name: tls-volume
+          mountPath: /opt/cert/encoded.pem
+          subPath: encoded.pem
+      {{- end }}
+      {{- if .Values.policyEnforcementAgent.enabled }}
+      - image: {{.Values.policyEnforcementAgent.image}}
+        name: pea
+        imagePullPolicy: Always
+        args:
+        - -config-path
+        - /opt/pea/
+        volumeMounts:
+        - name: config-volume
+          mountPath: /opt/pea/application.yaml
+          subPath: pea-app.yaml
+        - name: config-volume
+          mountPath: /opt/pea/kmux-config.yaml
+          subPath: pea-kmux-config.yaml
+        - name: config-volume
+          mountPath: /opt/pea/pea-policy-kmux-config.yaml
+          subPath: pea-policy-kmux-config.yaml
+        - name: config-volume
+          mountPath: /opt/pea/pea-state-kmux-config.yaml
+          subPath: pea-state-kmux-config.yaml
+        - name: tls-volume
+          mountPath: /opt/cert/encoded.pem
+          subPath: encoded.pem
+        - name: cp-node-{{ .Values.clusterName  }}-policy-pvc
+          mountPath: /opt/pea/policies/
+      {{- end }}
+      restartPolicy: Always
+      volumes:
+      - name: config-volume
+        configMap:
+          name: cp-node-config-{{.Values.clusterName}}
+      - name: tls-volume
+        secret:
+          secretName: ca-cert
+      - name: cp-node-{{ .Values.clusterName  }}-policy-pvc
+        persistentVolumeClaim:
+          claimName: cp-node-{{ .Values.clusterName  }}-policy-pvc

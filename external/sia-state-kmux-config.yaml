@@ -1,0 +1,23 @@
+kmux:
+  source:
+    stream: rabbitmq
+
+rabbitmq:
+  server: {{ include "rmqAddr" . | quote }}
+  username: {{ .Values.rmq.username }}
+  password: {{ .Values.rmq.password }}
+  exchange:
+    name: {{ include "prefixWithVariable" (dict "variable" .Values.clusterName ) | quote }}
+    type: "direct"
+    durable: true
+    auto-delete: true
+  queue:
+    name: {{ printf "%s-sia" (include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.state) ) | quote }}
+    durable: true
+    auto-delete: true
+  consumer-tag: "sia"
+  debug: false
+  tls:
+    enabled: true
+    cert-file: "/opt/cert/encoded.pem"
+    skip-verify: false

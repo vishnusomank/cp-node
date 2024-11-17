@@ -1,0 +1,14 @@
+{{- if .Values.rmq.deploy }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.rmq.name}}
+  labels:
+    app: {{.Values.rmq.name}}
+spec:
+  type: {{ .Values.services.rmq.type }}
+  selector:
+    app: {{ .Values.rmq.name}}
+  ports:
+	{{- .Values.services.rmq.ports | toYaml | nindent 2 }}
+{{- end }}

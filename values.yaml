@@ -1,0 +1,118 @@
+clusterName: test 
+
+address:
+  knoxgw: "knox-gw.dev.accuknox.com:3000"
+  spire: "spire.dev.accuknox.com"
+  pps: "pps.dev.accuknox.com"
+
+
+
+rmq:
+  deploy: true
+  name: rabbitmq
+  image: docker.io/rabbitmq:3.12.2-management
+  imagePullPolicy: Always
+  username: "zero"
+  password: "emVyby1hY2N1a25veA=="
+  passwordHash: ""
+
+
+topics:
+  policyV1: "policy-v1"
+  summaryV2: "summary-v2"
+  alerts: "alerts"
+  logs: "logs"
+  state: "state-event"
+  container: "container-policy"
+  host: "host-policy"
+  policies: "policies"
+
+spire:  
+  enable: true
+  joinToken: "6baff46e-26b6-4464-ad4f-9db93767dfb9"
+  agent: ""
+
+secrets:
+  encodedPem: ""
+  rmq:
+    ca_certificate: ""
+    certificate: ""
+    key: ""
+
+configMaps:
+  feeder:
+    kmuxConfig: "external/feeder-kmux.yaml"
+    policyKmuxConfig: "external/feeder-policy-kmux.yaml"
+    summaryKmuxConfig: "external/feeder-summary-kmux.yaml"
+    alertsKmuxConfig: "external/feeder-alerts-kmux.yaml"
+  pea:
+    kmuxConfig: "external/pea-kmux.yaml"
+    policyKmuxConfig: "external/pea-policy-kmux-config.yaml"
+    stateKmuxConfig: "external/pea-state-kmux-config.yaml"
+  sia:
+    kmuxConfig: "external/sia-kmux.yaml"
+    stateKmuxConfig: "external/sia-state-kmux-config.yaml"
+  peaConfig: "external/pea.yaml"
+  siaConfig: "external/sia.yaml"
+  spireAgentConfig: "external/spire-agent.conf"
+  rmq: 
+    definitions: "external/definitions.json"
+    config: "external/rabbitmq.conf"
+
+feederService:
+  enabled: true
+  image: "accuknox/feeder-service:v0.7.1"
+  imagePullPolicy: Always
+  volumes:  
+
+policyEnforcementAgent:
+  enabled: true
+  image: "accuknox/policy-enforcement-agent:v0.6.1"
+  imagePullPolicy: Always
+sharedInformerAgent:
+  enabled: true
+  image: "accuknox/shared-informer-agent:v0.7.1"
+  imagePullPolicy: Always
+spireAgent:
+  enabled: true
+  image: "accuknox/spire-agent:latest"
+  imagePullPolicy: Always
+discover:
+  enabled: true
+  image: "accuknox/discovery-engine-discover:v0.1.33"
+  imagePullPolicy: Always
+
+
+cpNode:
+  replicas: 1
+  serviceAccountName: cp-node
+  strategy:
+    type: Recreate
+
+
+services:
+  cpNode:
+    type: ClusterIP
+    ports:
+    - name: "spire"
+      port: 9091
+      targetPort: 9091
+    - name: "healthz"
+      port: 9090
+      targetPort: 9090
+  rmq:
+    type: LoadBalancer
+    ports:
+    - protocol: TCP
+      port: 5672
+      targetPort: 5672
+      name: tcp
+    - protocol: TCP
+      port: 5671
+      targetPort: 5671
+      name: ssl
+    - protocol: TCP
+      port: 15672
+      targetPort: 15672
+      name: management
+

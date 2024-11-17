@@ -1,0 +1,16 @@
+kmux:
+  sink:
+    stream: knox-gateway
+  security: spire
+
+knox-gateway:
+  server: {{ .Values.address.knoxgw }}
+
+spire:
+  spiffeID:
+    format: "spiffe://<domainName>/<WSID>/<ClusterID>/<componentName>"
+
+  suffixSkipSet:
+    - ".sock"
+    - ".socket"
+

@@ -1,0 +1,13 @@
+{{- if .Values.rmq.deploy }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-config
+  labels:
+    app: {{ .Values.rmq.name }}
+data:
+  definitions.json: |
+    {{ tpl (.Files.Get  .Values.configMaps.rmq.definitions ) . | nindent 4 }}
+  rabbitmq.conf: |
+    {{ tpl (.Files.Get  .Values.configMaps.rmq.config ) . | nindent 4 }}
+{{- end }}
