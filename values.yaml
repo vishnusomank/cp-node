@@ -5,10 +5,8 @@ address:
   spire: "spire.dev.accuknox.com"
   pps: "pps.dev.accuknox.com"
 
-
-
 rmq:
-  deploy: true
+  deploy: false
   name: rabbitmq
   image: docker.io/rabbitmq:3.12.2-management
   imagePullPolicy: Always
@@ -61,24 +59,24 @@ configMaps:
 
 feederService:
   enabled: true
-  image: "accuknox/feeder-service:v0.7.1"
+  image: "accuknox/feeder-service:v0.7.4"
   imagePullPolicy: Always
   volumes:  
 
 policyEnforcementAgent:
   enabled: true
-  image: "accuknox/policy-enforcement-agent:v0.6.1"
+  image: "accuknox/policy-enforcement-agent:v0.6.3"
   imagePullPolicy: Always
 sharedInformerAgent:
   enabled: true
-  image: "accuknox/shared-informer-agent:v0.7.1"
+  image: "accuknox/shared-informer-agent:v0.7.3"
   imagePullPolicy: Always
 spireAgent:
   enabled: true
   image: "accuknox/spire-agent:latest"
   imagePullPolicy: Always
 discover:
-  enabled: true
+  enabled: false
   image: "accuknox/discovery-engine-discover:v0.1.33"
   imagePullPolicy: Always
 

@@ -9,7 +9,7 @@ rabbitmq:
   exchange:
     name: {{ include "prefixWithVariable" (dict "variable" .Values.clusterName ) | quote }}
     type: "direct"
-    durable: true
+    durable: false
     auto-delete: true
   queue:
     name: {{ printf "%s-sia" (include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.state) ) | quote }}

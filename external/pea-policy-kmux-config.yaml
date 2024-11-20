@@ -9,7 +9,7 @@ rabbitmq:
   exchange:
     name: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" "fanout" ) | quote }}
     type: "fanout"
-    durable: true
+    durable: false
     auto-delete: true
   queue:
     name: {{ include "prefixWithVariable" (dict "prefix" .Values.clusterName "variable" .Values.topics.policies ) | quote }}
